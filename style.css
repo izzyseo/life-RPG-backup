@@ -1,0 +1,104 @@
+body {
+  font-family: sans-serif;
+  background: linear-gradient(to right, #ffe0e9, #e0f7ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.container {
+  text-align: center;
+}
+
+h1 {
+  font-size: 2.5em;
+  margin-bottom: 30px;
+}
+
+.button-group {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 200px;
+  margin-top: 100px;
+}
+
+button {
+  width: 120px;
+  height: 120px;
+  border-radius: 120px;
+  font-size: 1em;
+  border: none;
+  background-color: #ffb6c1;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: #ff85a2;
+}
+
+.calendar-container {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-top: 40px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.day-box {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  text-align: center;
+}
+
+.day-box h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.day-box button {
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: none;
+  background-color: #ffb6c1;
+  color: white;
+  cursor: pointer;
+}
+
+.quest-box {
+  margin-top: 10px;
+  background-color: #fff4f7;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.quest-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.quest-item input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.success-label {
+  margin-top: 8px;
+  color: green;
+  font-weight: bold;
+}

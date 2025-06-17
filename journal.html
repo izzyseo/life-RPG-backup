@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Journal</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Raleway&display=swap" rel="stylesheet">
+    <style>
+        .journal-container {
+            max-width: 600px;
+            margin: auto;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        .journal-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            font-family: 'Raleway', sans-serif;
+            width: 100%;
+            font-size: 1em;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: #ffcad253;
+            resize: none;
+            min-height: 100px;
+        }
+
+        .date-list {
+            font-family: 'Raleway', sans-serif;
+            display: flex;
+            justify-content: center;
+            /* 가운데 정렬 */
+            align-items: center;
+            gap: 8px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+
+        .month-label {
+            font-weight: bold;
+            font-size: 1em;
+            margin-right: 12px;
+            white-space: nowrap;
+        }
+
+        .date-button {
+            background-color: rgba(208, 208, 208, 0);
+            border: none;
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+            min-width: 36px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .date-button.today {
+            background-color: #ffb6c18e;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="journal-container">
+        <div class="journal-title">TODAY</div>
+        <textarea id="journal-text" placeholder="How was today?"></textarea>
+
+        <div class="date-list" id="date-list"></div>
+    </div>
+
+
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDCrNGJQJDVYhugWWkAtefikhzjzpOrphA",
+            authDomain: "life-rpg-1.firebaseapp.com",
+            projectId: "life-rpg-1",
+            storageBucket: "life-rpg-1.firebasestorage.app",
+            messagingSenderId: "41510513611",
+            appId: "1:41510513611:web:602c4ec0ee81edee15644e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 🔹 날짜 형식 도우미
+        function formatDate(date) {
+            return date.toISOString().slice(0, 10); // yyyy-mm-dd
+        }
+
+        const today = new Date();
+        const todayKey = formatDate(today);
+        let selectedDate = todayKey;
+
+        const textarea = document.getElementById("journal-text");
+        const dateListEl = document.getElementById("date-list");
+
+        //  날짜 버튼 생성
+        function renderDateButtons() {
+            dateListEl.innerHTML = ""; // 초기화
+            const monthLabel = today.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+            const monthSpan = document.createElement('span');
+            monthSpan.className = 'month-label';
+            monthSpan.textContent = monthLabel;
+            dateListEl.appendChild(monthSpan);
+
+            for (let i = -5; i <= 4; i++) {
+                const d = new Date();
+                d.setDate(today.getDate() + i);
+                const key = formatDate(d);
+
+                const btn = document.createElement('button');
+                btn.textContent = d.getDate();
+                btn.className = 'date-button';
+                btn.dataset.date = key;
+
+                if (key === todayKey) {
+                    btn.classList.add('today');
+                }
+
+                // 🔸 색상 결정
+                getDoc(doc(db, "journals", key)).then(docSnap => {
+                    if (docSnap.exists()) {
+                        btn.style.backgroundColor = "#ffb6c1"; // 핑크 (있음)
+                    } else {
+                        btn.style.backgroundColor = "lightgray"; // 회색 (없음)
+                    }
+                });
+
+                // 🔸 클릭 이벤트
+                btn.addEventListener("click", async () => {
+                    selectedDate = key;
+                    await loadJournal(key);
+                });
+
+                dateListEl.appendChild(btn);
+            }
+        }
+
+        // 🔹 불러오기
+        async function loadJournal(dateKey) {
+            const docRef = doc(db, "journals", dateKey);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                textarea.value = docSnap.data().text || "";
+            } else {
+                textarea.value = "";
+            }
+            autoResize();
+        }
+
+        // 🔹 저장하기 (자동 저장)
+        textarea.addEventListener("input", async () => {
+            const docRef = doc(db, "journals", selectedDate);
+            await setDoc(docRef, {
+                text: textarea.value,
+                updated: new Date().toISOString()
+            });
+            renderDateButtons(); // 색상 갱신
+            autoResize();
+        });
+
+        // 🔹 텍스트박스 높이 자동 조절
+        function autoResize() {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        // 🔹 초기 실행
+        renderDateButtons();
+        loadJournal(todayKey);
+
+
+
+    </script>
+</body>
+
+</html>

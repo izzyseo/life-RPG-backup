@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Life RPG</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway&display=swap" rel="stylesheet">
+  <style>
+    /* 페이지 전체를 수직/수평 가운데 정렬 */
+    body {
+      font-family: 'Raleway', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      /* 전체 화면 높이 */
+      margin: 0;
+      background-color: #fffafc;
+      gap: 30px;
+      /* 타이틀과 버튼 사이 간격 */
+    }
+
+    /* 타이틀 스타일 */
+    h1 {
+      font-size: 32px;
+      color: #333;
+      letter-spacing: 2px;
+    }
+
+    /* 버튼 스타일 */
+    button {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background-color: #ffd4da;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #journal-btn:hover {
+      background-color: #ff9eb3;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Life RPG</h1>
+  <div class="button-container">
+    <button id="journal-btn">Journal</button>
+    <button id="daily-btn">Daily Quest</button>
+  </div>
+
+  <script>
+    document.getElementById("journal-btn").addEventListener("click", () => {
+      window.location.href = "journal.html"; // 저널 페이지로 이동
+    });
+
+    document.getElementById("daily-btn").addEventListener("click", () => {
+      window.location.href = "daily.html"; // 데일리 퀘스트 페이지로 이동
+    });
+  </script>
+
+</body>
+
+</html>

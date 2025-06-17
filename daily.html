@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Daily Quest</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <h1>D A I L Y Q U E S T</h1>
+    <div id="content"></div>
+    <div id="calendar" class="calendar-container"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDCrNGJQJDVYhugWWkAtefikhzjzpOrphA",
+            authDomain: "life-rpg-1.firebaseapp.com",
+            projectId: "life-rpg-1",
+            storageBucket: "life-rpg-1.firebasestorage.app",
+            messagingSenderId: "41510513611",
+            appId: "1:41510513611:web:602c4ec0ee81edee15644e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const contentEl = document.getElementById('content');
+
+        const today = new Date();
+        const weekKey = getNextWeekKey(today);
+
+        function getNextWeekKey(date) {
+            const nextMonday = new Date(date);
+            nextMonday.setDate(date.getDate() + (1 - date.getDay()) + 7);
+            const sunday = new Date(nextMonday);
+            sunday.setDate(nextMonday.getDate() + 6);
+            const start = nextMonday.toISOString().slice(0, 10).replace(/-/g, '');
+            const end = sunday.toISOString().slice(0, 10).replace(/-/g, '');
+            return `${start}-${end}`;
+        }
+
+        async function checkOrShowSetup() {
+            const setupDoc = await getDoc(doc(db, "weekly-setup", weekKey));
+            if (!setupDoc.exists()) {
+                showQuestSetupUI();
+            } else {
+                contentEl.textContent = '✅ 퀘스트가 이미 설정되어 있습니다.';
+                renderCalendar();
+            }
+        }
+
+        function showQuestSetupUI(existingQuests = []) {
+            const prefill = existingQuests.join('\n');
+            contentEl.innerHTML = `
+        <p>다음 주 (${weekKey})의 퀘스트를 설정해 주세요</p>
+        <textarea id="quest-input" rows="6" placeholder="한 줄에 하나씩 퀘스트를 적으세요">${prefill}</textarea><br>
+        <button id="submit-quests">완료</button>
+      `;
+            document.getElementById('submit-quests').addEventListener('click', async () => {
+                const quests = document.getElementById('quest-input').value
+                    .split('\n')
+                    .map(q => q.trim())
+                    .filter(q => q.length > 0);
+                if (quests.length === 0) {
+                    alert('퀘스트를 한 개 이상 입력해야 합니다.');
+                    return;
+                }
+                await setDoc(doc(db, "weekly-setup", weekKey), {
+                    quests,
+                    created: new Date().toISOString()
+                });
+                alert('퀘스트가 저장되었습니다!');
+                location.reload();
+            });
+        }
+
+        const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+        const calendarEl = document.getElementById('calendar');
+
+        function renderCalendar() {
+            calendarEl.innerHTML = '';
+            for (let i = 0; i < 7; i++) {
+                const dayBox = document.createElement('div');
+                dayBox.className = 'day-box';
+
+                const dayName = document.createElement('h4');
+                dayName.textContent = weekdays[i];
+
+                const addBtn = document.createElement('button');
+                addBtn.textContent = '+';
+                addBtn.addEventListener('click', async () => {
+                    const questList = await getWeekQuests();
+                    const progressSnap = await getDoc(doc(db, "weekly-progress", weekKey));
+                    const progressData = progressSnap.exists() ? progressSnap.data() : {};
+                    const checkedToday = progressData[weekdays[i]] || [];
+                    const normalizedChecked = checkedToday.map(q => q.trim());
+
+                    const questBox = document.createElement('div');
+                    questBox.className = 'quest-box';
+
+                    questList.forEach(q => {
+                        const cleanQuest = q.trim();
+
+                        const item = document.createElement('div');
+                        item.className = 'quest-item';
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+
+                        if (normalizedChecked.includes(cleanQuest)) {
+                            checkbox.checked = true;
+                        }
+
+                        checkbox.addEventListener('change', async () => {
+                            await handleCheck(weekdays[i], cleanQuest, checkbox.checked);
+                            await updateSuccessLabel(dayBox, weekdays[i]); // ✅ 실시간 성공 업데이트
+                        });
+
+                        const label = document.createElement('label');
+                        label.textContent = cleanQuest;
+
+                        item.appendChild(checkbox);
+                        item.appendChild(label);
+                        questBox.appendChild(item);
+                    });
+
+                    dayBox.appendChild(questBox);
+                    await updateSuccessLabel(dayBox, weekdays[i]);
+                });
+
+                dayBox.appendChild(dayName);
+                dayBox.appendChild(addBtn);
+                calendarEl.appendChild(dayBox);
+            }
+        }
+
+        async function getWeekQuests() {
+            const docRef = doc(db, "weekly-setup", weekKey);
+            const docSnap = await getDoc(docRef);
+            return docSnap.exists() ? docSnap.data().quests || [] : [];
+        }
+
+        async function handleCheck(day, quest, checked) {
+            const ref = doc(db, "weekly-progress", weekKey);
+            const snap = await getDoc(ref);
+            let data = snap.exists() ? snap.data() : {};
+            let list = data[day] || [];
+
+            if (checked) {
+                if (!list.includes(quest)) list.push(quest);
+            } else {
+                list = list.filter(q => q !== quest);
+            }
+
+            data[day] = Array.from(new Set(list));
+            await setDoc(ref, data);
+        }
+
+        async function updateSuccessLabel(dayBox, day) {
+            const ref = doc(db, "weekly-progress", weekKey);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) return;
+
+            const data = snap.data();
+            const checkedList = (data[day] || []).map(q => q.trim());
+            const questList = await getWeekQuests();
+            const cleanQuests = questList.map(q => q.trim());
+
+            const matchedChecked = cleanQuests.filter(q =>
+                checkedList.some(c => c.toLowerCase() === q.toLowerCase())
+            );
+            const ratio = matchedChecked.length / cleanQuests.length;
+
+            console.log(`🟩 [${day}]`);
+            console.log('Clean Quests:', cleanQuests);
+            console.log('Checked List:', checkedList);
+            console.log('Matched:', matchedChecked);
+            console.log('Ratio:', ratio);
+
+            let label = dayBox.querySelector('.success-label');
+            if (!label) {
+                label = document.createElement('div');
+                label.className = 'success-label';
+                dayBox.appendChild(label);
+            }
+
+            label.textContent = ratio >= 0.7 ? '🎉 성공!' : '';
+        }
+
+        checkOrShowSetup();
+    </script>
+</body>
+
+</html>
