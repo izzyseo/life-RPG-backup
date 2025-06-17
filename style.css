@@ -1,11 +1,29 @@
+#header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#header h1 {
+  margin: 30px;
+  text-align: center;
+}
+
+#content {
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #333;
+}
+
 body {
   font-family: sans-serif;
   background: linear-gradient(to right, #ffe0e9, #e0f7ff);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
   margin: 0;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .container {
@@ -52,15 +70,16 @@ button:hover {
   gap: 10px;
   margin-top: 40px;
   max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  justify-content: center; /* ✅ 가운데 정렬 */
 }
 
 .day-box {
+  position: relative; /* 🔑  기준 잡아주기 */
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  padding: 10px;
+  padding: 10px 8px 32px; /* 아래쪽 조금 더 여유 */
   text-align: center;
 }
 
@@ -68,16 +87,31 @@ button:hover {
   margin: 0;
   font-size: 1rem;
 }
-
-.day-box button {
-  margin-top: 8px;
-  padding: 6px 10px;
-  font-size: 0.9rem;
-  border-radius: 8px;
+/* “+” 버튼 전용 스타일 */
+.day-box .add-btn {
+  position: absolute; /* 🔑  부모(.day-box) 기준 배치 */
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
   border: none;
   background-color: #ffb6c1;
-  color: white;
+  color: #fff;
+  font-size: 18px;
+  line-height: 26px; /* 글자를 수직 가운데 */
+  padding: 0;
   cursor: pointer;
+  transition: background 0.2s;
+}
+
+.day-box .add-btn:hover {
+  background-color: #ff85a2;
+}
+
+.today-highlight {
+  border: 2px solid #ff85a2;
+  background-color: #fff0f5;
 }
 
 .quest-box {

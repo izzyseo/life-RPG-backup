@@ -44,7 +44,6 @@
             flex-shrink: 0;
         }
 
-
         .month-label {
             font-weight: bold;
             font-size: 1em;
@@ -67,6 +66,9 @@
         .date-button.today {
             background-color: #ffb6c18e;
             font-weight: bold;
+            border: 2px solid #e78f6cca;
+            /* 테두리 추가 */
+
         }
     </style>
 </head>
@@ -78,9 +80,6 @@
 
         <div class="date-list" id="date-list"></div>
     </div>
-
-
-
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -152,6 +151,20 @@
             }
         }
 
+        function updateDateButtonStatus() {
+            const dateButtons = document.querySelectorAll('.date-button');
+            dateButtons.forEach((btn) => {
+                const key = btn.dataset.date;
+                getDoc(doc(db, "journals", key)).then(docSnap => {
+                    if (docSnap.exists()) {
+                        btn.style.backgroundColor = "#ffb6c1"; // 핑크 (있음)
+                    } else {
+                        btn.style.backgroundColor = "lightgray"; // 회색 (없음)
+                    }
+                });
+            });
+        }
+
         // 🔹 불러오기
         async function loadJournal(dateKey) {
             const docRef = doc(db, "journals", dateKey);
@@ -164,14 +177,13 @@
             autoResize();
         }
 
-        // 🔹 저장하기 (자동 저장)
         textarea.addEventListener("input", async () => {
             const docRef = doc(db, "journals", selectedDate);
             await setDoc(docRef, {
                 text: textarea.value,
                 updated: new Date().toISOString()
             });
-            renderDateButtons(); // 색상 갱신
+            updateDateButtonStatus(); // 상태만 업데이트
             autoResize();
         });
 
@@ -184,9 +196,6 @@
         // 🔹 초기 실행
         renderDateButtons();
         loadJournal(todayKey);
-
-
-
     </script>
 </body>
 
